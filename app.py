@@ -13,15 +13,13 @@ st.title("💰 我的雲端記帳本")
 def get_sheet():
     scope = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
     
-    # 🔥 更新重點：直接讀取 Secrets，不需要 json.loads 了
+    # 讀取 Secrets (這裡會自動讀取您剛剛設定好的金鑰)
     creds_dict = st.secrets["service_account"]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
     client = gspread.authorize(creds)
     
-    # 連線到試算表
-    sheet_url = "my-bot@my-money-app-484704.iam.gserviceaccount.com
-my-bot@my-money-app-484704.iam.gserviceaccount.com
-/spreadsheets/d/1VzyglFpEC3yS11aloU1YJclw-6Moaewyf8DTR-j7HDc/edit"
+    # 🔥 這裡是正確的試算表網址 (我幫您填好了)
+    sheet_url = "https://docs.google.com/spreadsheets/d/1VzyglFpEC3yS11aloU1YJclw-6Moaewyf8DTR-j7HDc/edit"
     return client.open_by_url(sheet_url).sheet1
 
 # --- 主程式 ---
@@ -39,14 +37,16 @@ try:
         submitted = st.form_submit_button("💰 記一筆")
         
         if submitted and amount > 0:
+            # 寫入 Google Sheet
             sheet.append_row([str(date), item, amount, category])
             st.success(f"✅ 成功儲存：{item} ${amount}")
             time.sleep(1)
             st.rerun()
             
-    # 顯示紀錄
+    # 顯示最近的記帳紀錄
     st.write("---")
     st.subheader("📋 最近的收支紀錄")
+    # 讀取資料
     data = sheet.get_all_records()
     if data:
         df = pd.DataFrame(data)
