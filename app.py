@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import gspread
 from google.oauth2.service_account import Credentials
-import json
 import time
 from datetime import datetime
 
@@ -12,13 +11,14 @@ st.title("💰 我的雲端記帳本")
 
 # --- 連線設定 ---
 def get_sheet():
-    # 讀取 Secrets 裡的鑰匙
     scope = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
-    json_text = st.secrets["service_account"]["service_account_info"]
-    creds = Credentials.from_service_account_info(json.loads(json_text), scopes=scope)
+    
+    # 🔥 更新重點：直接讀取 Secrets，不需要 json.loads 了
+    creds_dict = st.secrets["service_account"]
+    creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
     client = gspread.authorize(creds)
     
-    # 直接連線到您的試算表 (使用您提供的 ID)
+    # 連線到試算表
     sheet_url = "https://docs.google.com/spreadsheets/d/1VzyglFpEC3yS11aloU1YJclw-6Moaewyf8DTR-j7HDc/edit"
     return client.open_by_url(sheet_url).sheet1
 
@@ -37,13 +37,12 @@ try:
         submitted = st.form_submit_button("💰 記一筆")
         
         if submitted and amount > 0:
-            # 寫入 Google Sheet
             sheet.append_row([str(date), item, amount, category])
             st.success(f"✅ 成功儲存：{item} ${amount}")
             time.sleep(1)
             st.rerun()
             
-    # 顯示最近的記帳紀錄
+    # 顯示紀錄
     st.write("---")
     st.subheader("📋 最近的收支紀錄")
     data = sheet.get_all_records()
