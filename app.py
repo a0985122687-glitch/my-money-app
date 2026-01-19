@@ -19,7 +19,9 @@ def get_sheet():
     client = gspread.authorize(creds)
     
     # 連線到試算表
-    sheet_url = "https://docs.google.com/spreadsheets/d/1VzyglFpEC3yS11aloU1YJclw-6Moaewyf8DTR-j7HDc/edit"
+    sheet_url = "my-bot@my-money-app-484704.iam.gserviceaccount.com
+my-bot@my-money-app-484704.iam.gserviceaccount.com
+/spreadsheets/d/1VzyglFpEC3yS11aloU1YJclw-6Moaewyf8DTR-j7HDc/edit"
     return client.open_by_url(sheet_url).sheet1
 
 # --- 主程式 ---
