@@ -12,11 +12,13 @@ st.title("💰 我的雲端記帳本 (Google Sheets 連線版)")
 
 # --- 連接 Google Sheets 的函式 ---
 def get_google_sheet():
-    # 設定權限範圍
-    scopes = ["https://www.googleapis.com/auth/spreadsheets"]
+    # 🌟 這裡做了修改：增加了 "drive" 的權限，解決 403 錯誤
+    scopes = [
+        "https://www.googleapis.com/auth/spreadsheets",
+        "https://www.googleapis.com/auth/drive"
+    ]
     
     # 從 Secrets 讀取鑰匙
-    # 這裡會去抓你在 Streamlit 後台設定的 service_account_info
     json_text = st.secrets["service_account"]["service_account_info"]
     creds_dict = json.loads(json_text)
     creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
@@ -52,18 +54,20 @@ amount = st.number_input("金額", min_value=0, step=1)
 if st.button("🚀 新增一筆"):
     if item and amount > 0:
         with st.spinner('正在寫入雲端...'):
-            # 準備要寫入的資料
-            # 注意：這裡的日期轉成字串，方便 Excel 閱讀
-            new_data = [str(date), item, amount, category]
-            
-            # 寫入 Google Sheet (加在最後一行)
-            sheet.append_row(new_data)
-            
-            st.success(f"✅ 成功！已將「{item} {amount}元」寫入雲端！")
-            
-            # 休息一下再重整，讓資料同步
-            time.sleep(1)
-            st.rerun()
+            try:
+                # 準備要寫入的資料
+                new_data = [str(date), item, amount, category]
+                
+                # 寫入 Google Sheet
+                sheet.append_row(new_data)
+                
+                st.success(f"✅ 成功！已將「{item} {amount}元」寫入雲端！")
+                
+                # 休息一下再重整
+                time.sleep(1)
+                st.rerun()
+            except Exception as e:
+                st.error(f"寫入失敗：{e}")
     else:
         st.warning("⚠️ 請輸入項目和金額喔！")
 
@@ -72,10 +76,7 @@ st.markdown("---")
 st.subheader("📋 目前的帳本紀錄")
 
 if not df.empty:
-    # 顯示表格
     st.dataframe(df, use_container_width=True)
-    
-    # 簡單統計
     total_spent = df["金額"].sum()
     st.info(f"💵 累積總花費： **{total_spent} 元**")
 else:
