@@ -19,17 +19,15 @@ def get_google_sheet():
     ]
     
     # 從 Secrets 讀取鑰匙
-    # 注意：這裡對應您在 Streamlit Secrets 填寫的格式
     json_text = st.secrets["service_account"]["service_account_info"]
     creds_dict = json.loads(json_text)
     creds = Credentials.from_service_account_info(creds_dict, scopes=scopes)
     
     # 連線並打開試算表
     client = gspread.authorize(creds)
-    # 改用 ID 直接抓取，絕對不會錯
-    sheet = client.open_by_key("1VzyglFpEC3yS11aloU1YJclw-6Moaewyf8DTR-j7HDc").sheet1
-    # 打開您的試算表 (名稱必須完全一樣)
-
+    
+    # 🌟 這裡已經換成您的專屬 ID 了，絕對不會錯！
+    sheet = client.open_by_key("1VzyglFpEC3yS11aloU1YJclw-6Moaewyf8DTR-j7HDc").sheet1 
     return sheet
 
 # --- 3. 讀取目前的資料 ---
@@ -58,7 +56,7 @@ if st.button("🚀 新增一筆"):
     if item and amount > 0:
         with st.spinner('正在寫入雲端...'):
             try:
-                # 準備要寫入的資料：轉成字串的日期, 項目, 金額, 類別
+                # 準備要寫入的資料
                 new_data = [str(date), item, amount, category]
                 
                 # 寫入 Google Sheet
@@ -78,12 +76,14 @@ if st.button("🚀 新增一筆"):
 st.markdown("---")
 st.subheader("📋 目前的帳本紀錄")
 
-# 如果資料表有資料，就顯示出來
 if not df.empty:
     st.dataframe(df, use_container_width=True)
-    # 計算總花費
     if "金額" in df.columns:
-        total_spent = df["金額"].sum()
-        st.info(f"💵 累積總花費： **{total_spent} 元**")
+        # 嘗試計算總金額，如果資料格式對的話
+        try:
+            total_spent = df["金額"].sum()
+            st.info(f"💵 累積總花費： **{total_spent} 元**")
+        except:
+            pass
 else:
     st.write("目前還沒有資料，快來記第一筆吧！")
