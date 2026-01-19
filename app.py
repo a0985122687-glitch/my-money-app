@@ -19,7 +19,7 @@ def get_sheet():
     client = gspread.authorize(creds)
     
     # 🔥 這裡是正確的試算表網址 (我幫您填好了)
-    sheet_url = "https://docs.google.com/spreadsheets/d/1VzyglFpEC3yS11aloU1YJclw-6Moaewyf8DTR-j7HDc/edit"
+    sheet_url = "my-bot@my-money-app-484704.iam.gserviceaccount.com"
     return client.open_by_url(sheet_url).sheet1
 
 # --- 主程式 ---
