@@ -26,9 +26,10 @@ def get_google_sheet():
     
     # 連線並打開試算表
     client = gspread.authorize(creds)
-    
+    # 改用 ID 直接抓取，絕對不會錯
+    sheet = client.open_by_key("1VzyglFpEC3yS11aloU1YJclw-6Moaewyf8DTR-j7HDc").sheet1
     # 打開您的試算表 (名稱必須完全一樣)
-    sheet = client.open("我的記帳app").sheet1 
+
     return sheet
 
 # --- 3. 讀取目前的資料 ---
