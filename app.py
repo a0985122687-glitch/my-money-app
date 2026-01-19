@@ -13,13 +13,15 @@ st.title("💰 我的雲端記帳本")
 def get_sheet():
     scope = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
     
-    # 讀取 Secrets (這裡會自動讀取您剛剛設定好的金鑰)
+    # 讀取 Secrets
     creds_dict = st.secrets["service_account"]
     creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
     client = gspread.authorize(creds)
     
-    # 🔥 這裡是正確的試算表網址 (我幫您填好了)
-    sheet_url = "my-bot@my-money-app-484704.iam.gserviceaccount.com"
+    # 🔥🔥🔥 修正重點：這裡必須是網址，不能是 Email 🔥🔥🔥
+    # 我已經幫您填上您之前截圖中的試算表 ID
+    sheet_url = "https://docs.google.com/spreadsheets/d/1VzyglFpEC3yS11aloU1YJclw-6Moaewyf8DTR-j7HDc/edit"
+    
     return client.open_by_url(sheet_url).sheet1
 
 # --- 主程式 ---
@@ -37,22 +39,23 @@ try:
         submitted = st.form_submit_button("💰 記一筆")
         
         if submitted and amount > 0:
-            # 寫入 Google Sheet
             sheet.append_row([str(date), item, amount, category])
             st.success(f"✅ 成功儲存：{item} ${amount}")
             time.sleep(1)
             st.rerun()
             
-    # 顯示最近的記帳紀錄
+    # 顯示紀錄
     st.write("---")
     st.subheader("📋 最近的收支紀錄")
-    # 讀取資料
-    data = sheet.get_all_records()
-    if data:
-        df = pd.DataFrame(data)
-        st.dataframe(df)
-    else:
-        st.info("目前還沒有資料，快來記第一筆吧！")
+    try:
+        data = sheet.get_all_records()
+        if data:
+            df = pd.DataFrame(data)
+            st.dataframe(df)
+        else:
+            st.info("目前還沒有資料，快來記第一筆吧！")
+    except:
+        st.info("無法讀取資料，可能是表格是空的，請先記一筆試試看。")
 
 except Exception as e:
     st.error("連線發生錯誤！")
