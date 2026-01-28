@@ -1,4 +1,2 @@
+yfinance
 streamlit
-pandas
-gspread
-google-auth
