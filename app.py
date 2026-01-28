@@ -1,62 +1,25 @@
 import streamlit as st
+import yfinance as yf
 import pandas as pd
-import gspread
-from google.oauth2.service_account import Credentials
-import time
-from datetime import datetime
 
-# --- 網頁設定 ---
-st.set_page_config(page_title="我的雲端記帳本", page_icon="💰")
-st.title("💰 我的雲端記帳本")
+st.title("📈 我的股票分析助理")
 
-# --- 連線設定 ---
-def get_sheet():
-    scope = ['https://www.googleapis.com/auth/spreadsheets', 'https://www.googleapis.com/auth/drive']
-    
-    # 讀取 Secrets
-    creds_dict = st.secrets["service_account"]
-    creds = Credentials.from_service_account_info(creds_dict, scopes=scope)
-    client = gspread.authorize(creds)
-    
-    # 🔥 這是您剛剛提供的正確網址 (已更新 ID：S11aIoU)
-    sheet_url = "https://docs.google.com/spreadsheets/d/1VzyglFpEC3yS11aIoU1YJclw-6Moaewyf8DTR-j7HDc/edit?gid=0#gid=0"
-    
-    return client.open_by_url(sheet_url).sheet1
+# 輸入框
+ticker = st.text_input("請輸入股票代碼 (台股請加 .TW)", value="2330.TW")
 
-# --- 主程式 ---
-try:
-    sheet = get_sheet()
-    
-    # 建立輸入表單
-    with st.form("accounting_form", clear_on_submit=True):
-        col1, col2 = st.columns(2)
-        date = col1.date_input("日期", datetime.today())
-        category = col2.selectbox("類別", ["餐飲", "交通", "購物", "娛樂", "生活", "其他"])
-        item = st.text_input("項目 (例如：午餐、捷運)")
-        amount = st.number_input("金額", min_value=0, step=1)
-        
-        submitted = st.form_submit_button("💰 記一筆")
-        
-        if submitted and amount > 0:
-            # 寫入 Google Sheet
-            sheet.append_row([str(date), item, amount, category])
-            st.success(f"✅ 成功儲存：{item} ${amount}")
-            time.sleep(1)
-            st.rerun()
-            
-    # 顯示紀錄
-    st.write("---")
-    st.subheader("📋 最近的收支紀錄")
-    try:
-        data = sheet.get_all_records()
-        if data:
-            df = pd.DataFrame(data)
-            st.dataframe(df)
-        else:
-            st.info("目前還沒有資料，快來記第一筆吧！")
-    except:
-        st.info("無法讀取資料，可能是表格是空的，請先記一筆試試看。")
+# 選擇日期範圍
+days = st.slider("顯示天數", min_value=10, max_value=365, value=100)
 
-except Exception as e:
-    st.error("連線發生錯誤！")
-    st.write(f"錯誤原因：{e}")
+# 抓取資料
+data = yf.download(ticker, period=f"{days}d")
+
+if not data.empty:
+    # 顯示收盤價折線圖
+    st.subheader(f"{ticker} 最近 {days} 天走勢")
+    st.line_chart(data['Close'])
+    
+    # 顯示數據表格
+    st.subheader("最新數據摘要")
+    st.write(data.tail())
+else:
+    st.error("找不到這檔股票，請確認代碼是否輸入正確。")
